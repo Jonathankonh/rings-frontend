@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import RingsView from './views/RingsView.vue'
+import TasksView from './views/TasksView.vue'
 
 // ---------- theme ----------
 const theme = ref(localStorage.getItem('theme') || 'system')
@@ -49,11 +50,13 @@ const activeTab = ref('rings') // später auch 'tasks', 'priorities'
 
     <nav class="tabs">
       <button :class="{ active: activeTab === 'rings' }" @click="activeTab = 'rings'">Ringe</button>
-      <button disabled title="kommt als Nächstes">Aufgaben</button>
+      <!-- nachher -->
+      <button :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">Aufgaben</button>
       <button disabled title="kommt als Nächstes">Prioritäten</button>
     </nav>
 
     <RingsView v-if="activeTab === 'rings'" />
+    <TasksView v-if="activeTab === 'tasks'" />
   </div>
 </template>
 
