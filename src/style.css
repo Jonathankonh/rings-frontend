@@ -77,3 +77,20 @@ body {
 @media (min-width: 1000px) {
     .app-container { max-width: 980px; padding-left: 40px; padding-right: 40px; padding-top: 36px; }
 }
+
+/* Shared sheet form elements — used by every bottom sheet (category, task, ...) */
+.field-label { font-family: monospace; font-size: 11px; color: var(--ink-60); margin: 0 0 8px 2px; }
+
+.sheet input[type='text'], .sheet input:not([type]), input[type='number'] {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 13px 14px;
+    font-size: 15px; margin-bottom: 14px; background: var(--paper-2); color: var(--ink);
+    font-family: inherit;
+}
+.sheet input:focus { outline: 2px solid var(--purple); }
+
+.choice-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+.choice { border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 13px; cursor: pointer; font-family: monospace; }
+.choice.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+.go { width: 100%; border: none; background: var(--green); color: white; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; }
+.cancel { width: 100%; border: none; background: transparent; color: var(--ink-60); padding: 10px; font-size: 13px; margin-top: 4px; cursor: pointer; }

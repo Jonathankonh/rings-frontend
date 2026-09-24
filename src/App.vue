@@ -2,16 +2,13 @@
 import { ref, reactive, onMounted } from 'vue'
 import * as api from './api.js'
 import RingProgress from './components/RingProgress.vue'
+import BottomSheet from './components/BottomSheet.vue'
 
 // ---------- theme ----------
 const theme = ref(localStorage.getItem('theme') || 'system')
-
 function applyTheme() {
-  if (theme.value === 'system') {
-    document.documentElement.removeAttribute('data-theme')
-  } else {
-    document.documentElement.setAttribute('data-theme', theme.value)
-  }
+  if (theme.value === 'system') document.documentElement.removeAttribute('data-theme')
+  else document.documentElement.setAttribute('data-theme', theme.value)
 }
 function toggleTheme() {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -22,7 +19,7 @@ function toggleTheme() {
 }
 applyTheme()
 
-// ---------- date (updates itself, no page reload needed) ----------
+// ---------- date ----------
 const dateLabel = ref('')
 function renderDate() {
   const wd = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
@@ -38,31 +35,46 @@ const loading = ref(true)
 const error = ref(null)
 
 onMounted(async () => {
-  try {
-    rings.value = await api.getRings()
-  } catch (err) {
-    error.value = err.message
-  } finally {
-    loading.value = false
-  }
+  try { rings.value = await api.getRings() }
+  catch (err) { error.value = err.message }
+  finally { loading.value = false }
 })
-
-const newRing = reactive({ name: '', type: 'minutes', goal: 30, color: 'purple' })
-const showRingForm = ref(false)
-
-async function handleCreateRing() {
-  if (!newRing.name.trim()) return
-  const created = await api.createRing({ ...newRing })
-  rings.value.push(created)
-  newRing.name = ''
-  newRing.goal = 30
-  showRingForm.value = false
-}
 
 function subLabel(ring) {
   if (ring.type === 'minutes') return `${ring.value}/${ring.goal} min`
   if (ring.type === 'bool') return ring.value >= ring.goal ? 'erledigt' : 'offen'
   return `${ring.value}/${ring.goal}`
+}
+
+// ---------- category sheet ----------
+const showRingSheet = ref(false)
+const newRing = reactive({ name: '', type: 'minutes', goal: 30, color: 'purple' })
+
+const typeOptions = [
+  { value: 'minutes', label: 'Minuten' },
+  { value: 'count', label: 'Anzahl' },
+  { value: 'bool', label: 'Ja/Nein' },
+]
+const colorOptions = [
+  { value: 'purple', label: 'Lila' },
+  { value: 'blue', label: 'Blau' },
+  { value: 'red', label: 'Rot' },
+  { value: 'yellow', label: 'Gelb' },
+]
+
+function openRingSheet() {
+  newRing.name = ''
+  newRing.type = 'minutes'
+  newRing.goal = 30
+  newRing.color = 'purple'
+  showRingSheet.value = true
+}
+
+async function handleCreateRing(close) {
+  if (!newRing.name.trim()) return
+  const created = await api.createRing({ ...newRing })
+  rings.value.push(created)
+  close()
 }
 </script>
 
@@ -88,7 +100,7 @@ function subLabel(ring) {
     <section class="block">
       <div class="block-head">
         <h2>heute</h2>
-        <button class="add-inline" @click="showRingForm = !showRingForm">+ Kategorie</button>
+        <button class="add-inline" @click="openRingSheet">+ Kategorie</button>
       </div>
 
       <p v-if="loading">Lädt…</p>
@@ -102,24 +114,39 @@ function subLabel(ring) {
         </div>
         <p v-if="rings.length === 0" class="empty-hint">Noch keine Kategorie angelegt.</p>
       </div>
-
-      <form v-if="showRingForm" @submit.prevent="handleCreateRing" class="new-ring-form">
-        <input v-model="newRing.name" placeholder="Name, z.B. Lesen" required />
-        <select v-model="newRing.type">
-          <option value="minutes">Minuten</option>
-          <option value="count">Anzahl</option>
-          <option value="bool">Ja/Nein</option>
-        </select>
-        <input v-model.number="newRing.goal" type="number" min="1" />
-        <select v-model="newRing.color">
-          <option value="purple">Lila</option>
-          <option value="blue">Blau</option>
-          <option value="red">Rot</option>
-          <option value="yellow">Gelb</option>
-        </select>
-        <button type="submit">Anlegen</button>
-      </form>
     </section>
+
+    <!-- Kategorie-Sheet: exakt das Bottom-Sheet-Muster aus dem Prototyp -->
+    <BottomSheet v-model="showRingSheet" v-slot="{ close }">
+      <h3>Neue Kategorie</h3>
+
+      <div class="field-label">Name</div>
+      <input v-model="newRing.name" placeholder="z.B. Achtsamkeit" />
+
+      <div class="field-label">Art des Ziels</div>
+      <div class="choice-row">
+        <div
+            v-for="opt in typeOptions" :key="opt.value"
+            class="choice" :class="{ active: newRing.type === opt.value }"
+            @click="newRing.type = opt.value"
+        >{{ opt.label }}</div>
+      </div>
+
+      <div class="field-label">Tagesziel</div>
+      <input v-model.number="newRing.goal" type="number" min="1" />
+
+      <div class="field-label">Farbe</div>
+      <div class="choice-row">
+        <div
+            v-for="opt in colorOptions" :key="opt.value"
+            class="choice" :class="{ active: newRing.color === opt.value }"
+            @click="newRing.color = opt.value"
+        >{{ opt.label }}</div>
+      </div>
+
+      <button class="go" @click="handleCreateRing(close)">Kategorie anlegen</button>
+      <button class="cancel" @click="close">Abbrechen</button>
+    </BottomSheet>
   </div>
 </template>
 
@@ -149,8 +176,4 @@ function subLabel(ring) {
 .ring-sub { font-size: 11px; color: var(--ink-60); font-family: monospace; }
 .empty-hint { color: var(--ink-35); font-size: 13px; }
 .error { color: var(--red); }
-
-.new-ring-form { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
-.new-ring-form input, .new-ring-form select { padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper-2); color: var(--ink); }
-.new-ring-form button { padding: 8px 16px; border: none; border-radius: 8px; background: var(--ink); color: var(--paper); cursor: pointer; }
 </style>
