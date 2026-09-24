@@ -7,8 +7,14 @@ import BottomSheet from './components/BottomSheet.vue'
 // ---------- theme ----------
 const theme = ref(localStorage.getItem('theme') || 'system')
 function applyTheme() {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const isDark = theme.value === 'dark' || (theme.value === 'system' && prefersDark)
+
   if (theme.value === 'system') document.documentElement.removeAttribute('data-theme')
   else document.documentElement.setAttribute('data-theme', theme.value)
+
+  // Browser-Chrome/Statusleiste passend zum aktuellen Theme einfärben
+  document.getElementById('theme-color-meta')?.setAttribute('content', isDark ? '#1C1C1E' : '#FFFFFF')
 }
 function toggleTheme() {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches

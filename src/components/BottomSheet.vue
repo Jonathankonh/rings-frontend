@@ -1,7 +1,4 @@
 <script setup>
-// Generische Sheet-Hülle: Backdrop + von unten reinschiebendes Panel.
-// v-model steuert offen/zu, der Inhalt kommt komplett per <slot> von außen —
-// diese Komponente weiß nichts über Kategorien, Aufgaben o.ä.
 defineProps({ modelValue: { type: Boolean, default: false } })
 const emit = defineEmits(['update:modelValue'])
 function close() { emit('update:modelValue', false) }
@@ -9,7 +6,14 @@ function close() { emit('update:modelValue', false) }
 
 <template>
   <Teleport to="body">
-    <div class="backdrop" :class="{ open: modelValue }" @click="close" />
+    <!-- Transition + v-if statt nur opacity: das Backdrop existiert im DOM
+         nur während es sichtbar oder gerade am Ein-/Ausblenden ist. Das
+         verhindert, dass Safari die Statusleiste nach einer unsichtbaren,
+         aber technisch noch vorhandenen dunklen Fläche einfärbt. -->
+    <Transition name="fade">
+      <div v-if="modelValue" class="backdrop" @click="close" />
+    </Transition>
+
     <div class="sheet" :class="{ open: modelValue }">
       <slot :close="close" />
     </div>
@@ -18,10 +22,10 @@ function close() { emit('update:modelValue', false) }
 
 <style scoped>
 .backdrop {
-  position: fixed; inset: 0; background: rgba(17, 17, 17, 0.32);
-  opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 10;
+  position: fixed; inset: 0; background: rgba(17, 17, 17, 0.32); z-index: 10;
 }
-.backdrop.open { opacity: 1; pointer-events: auto; }
+.fade-enter-active, .fade-leave-active { transition: opacity .25s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 
 .sheet {
   position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface);
