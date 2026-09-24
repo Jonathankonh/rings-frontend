@@ -94,3 +94,4 @@ body {
 
 .go { width: 100%; border: none; background: var(--green); color: white; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; }
 .cancel { width: 100%; border: none; background: transparent; color: var(--ink-60); padding: 10px; font-size: 13px; margin-top: 4px; cursor: pointer; }
+.delete { width: 100%; border: 1px solid var(--red); background: transparent; color: var(--red); padding: 12px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 8px; }
