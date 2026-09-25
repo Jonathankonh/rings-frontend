@@ -38,6 +38,8 @@ setInterval(renderDate, 60 * 1000)
 
 // ---------- tabs ----------
 const activeTab = ref('rings') // 'rings' | 'tasks' | 'priorities'
+const tabTitles = { rings: 'Heute', tasks: 'Aufgaben', priorities: 'Prioritäten' }
+const pageTitle = computed(() => tabTitles[activeTab.value])
 
 // ---------- global "Neue Aufgabe" (Teil der Pillen-Navigation) ----------
 const { rings, fetchRings, loading: ringsLoading } = useRings()
@@ -60,7 +62,7 @@ async function handleCreateTask({ data }) {
       <header class="top">
         <div class="id">
           <span class="date">{{ dateLabel }}</span>
-          <h1>Heute</h1>
+          <h1>{{ pageTitle }}</h1>
         </div>
         <div style="display: flex; align-items: center;">
           <button class="desktop-add-btn" @click="showAddTask = true">Neue Aufgabe</button>
