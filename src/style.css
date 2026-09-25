@@ -1,56 +1,53 @@
 /* src/style.css — shared design tokens, imported once in main.js.
-   Every component reads these variables instead of hardcoding colors. */
+   Palette + type from design direction 1a. */
 
 :root {
-    --green: #1F9D55;
-    --green-soft: #DCF3E4;
-    --purple: #6C4FD1;
-    --purple-soft: #E7E1FA;
-    --blue: #3E6FD9;
-    --blue-soft: #E1E9FB;
-    --red: #D96C63;
-    --red-soft: #FBE4E1;
-    --yellow: #C99A2E;
-    --yellow-soft: #F7EBD2;
+    /* category accents — translated from 1a's OKLCH values, same 4 roles as before */
+    --purple: oklch(0.60 0.17 300);
+    --purple-soft: oklch(0.60 0.17 300 / 0.12);
+    --blue: oklch(0.60 0.16 250);
+    --blue-soft: oklch(0.60 0.16 250 / 0.12);
+    --red: oklch(0.63 0.19 25);
+    --red-soft: oklch(0.63 0.19 25 / 0.12);
+    --yellow: oklch(0.82 0.15 85);
+    --yellow-soft: oklch(0.82 0.15 85 / 0.14);
+    --green: oklch(0.72 0.17 150); /* exklusiv: "Ring voll" */
+    --green-soft: oklch(0.72 0.17 150 / 0.14);
 
-    --ink: #111111;
-    --ink-60: rgba(17, 17, 17, 0.6);
-    --ink-35: rgba(17, 17, 17, 0.35);
-    --paper: #FFFFFF;
-    --paper-2: #FAFAFA;
-    --surface: #FFFFFF;
-    --line: rgba(17, 17, 17, 0.10);
-    --radius: 18px;
+    --ink: #141414;
+    --ink-60: #6a6a67;   /* entspricht --mu in 1a */
+    --ink-35: rgba(20, 20, 20, 0.4);
+    --paper: #f6f6f4;    /* --bg: warmes Off-White statt reinem Weiß */
+    --paper-2: #ecebe8;  /* --sf2: sekundäre Fläche */
+    --surface: #ffffff;  /* --sf: Kartenfläche */
+    --line: rgba(20, 20, 20, 0.09);
+    --track: rgba(20, 20, 20, 0.07); /* Ring-Hintergrundspur, dezent anders als --line */
+    --radius: 24px; /* 1a nutzt 24px für Karten, nicht mehr 18px */
     color-scheme: light;
 }
 
-/* Dark mode — "Clear Dark": dark grey, not black; real white text */
 :root[data-theme='dark'] {
-    --ink: #FFFFFF;
-    --ink-60: rgba(255, 255, 255, 0.68);
+    --ink: #f3f3f1;
+    --ink-60: #9d9d99;
     --ink-35: rgba(255, 255, 255, 0.42);
-    --paper: #1C1C1E;
-    --paper-2: #262628;
-    --surface: #252527;
-    --line: rgba(255, 255, 255, 0.14);
-    --green-soft: rgba(31, 157, 85, 0.24);
-    --purple-soft: rgba(108, 79, 209, 0.28);
-    --blue-soft: rgba(62, 111, 217, 0.28);
-    --red-soft: rgba(217, 108, 99, 0.28);
-    --yellow-soft: rgba(201, 154, 46, 0.3);
+    --paper: #1f1f22;
+    --paper-2: #34343a;
+    --surface: #29292d;
+    --line: rgba(255, 255, 255, 0.09);
+    --track: rgba(255, 255, 255, 0.08);
     color-scheme: dark;
 }
 
-/* Falls kein manueller Toggle betätigt wurde: Systemeinstellung respektieren */
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']):not([data-theme='dark']) {
-        --ink: #FFFFFF;
-        --ink-60: rgba(255, 255, 255, 0.68);
+        --ink: #f3f3f1;
+        --ink-60: #9d9d99;
         --ink-35: rgba(255, 255, 255, 0.42);
-        --paper: #1C1C1E;
-        --paper-2: #262628;
-        --surface: #252527;
-        --line: rgba(255, 255, 255, 0.14);
+        --paper: #1f1f22;
+        --paper-2: #34343a;
+        --surface: #29292d;
+        --line: rgba(255, 255, 255, 0.09);
+        --track: rgba(255, 255, 255, 0.08);
         color-scheme: dark;
     }
 }
@@ -60,12 +57,11 @@ html, body { height: 100%; margin: 0; }
 body {
     background: var(--paper);
     color: var(--ink);
-    font-family: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-feature-settings: 'tnum' 1;
     -webkit-font-smoothing: antialiased;
 }
 
-/* Responsive container — schmal auf dem iPhone, breiter auf iPad/Laptop,
-   damit nicht einfach nur derselbe schmale Streifen skaliert wird */
 .app-container {
     max-width: 560px;
     margin: 0 auto;
@@ -78,8 +74,8 @@ body {
     .app-container { max-width: 980px; padding-left: 40px; padding-right: 40px; padding-top: 36px; }
 }
 
-/* Shared sheet form elements — used by every bottom sheet (category, task, ...) */
-.field-label { font-family: monospace; font-size: 11px; color: var(--ink-60); margin: 0 0 8px 2px; }
+/* Shared sheet form elements — unverändert aus dem vorherigen Schritt */
+.field-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink-60); margin: 0 0 8px 2px; }
 
 .sheet input[type='text'], .sheet input:not([type]), input[type='number'] {
     width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 13px 14px;
@@ -89,9 +85,13 @@ body {
 .sheet input:focus { outline: 2px solid var(--purple); }
 
 .choice-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
-.choice { border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 13px; cursor: pointer; font-family: monospace; }
+.choice { border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 13px; cursor: pointer; font-family: 'DM Mono', monospace; }
 .choice.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 
+.quad-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+.quad-pick .qp { border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 12px; text-align: center; cursor: pointer; font-family: 'DM Mono', monospace; }
+.quad-pick .qp.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
 .go { width: 100%; border: none; background: var(--green); color: white; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; }
-.cancel { width: 100%; border: none; background: transparent; color: var(--ink-60); padding: 10px; font-size: 13px; margin-top: 4px; cursor: pointer; }
 .delete { width: 100%; border: 1px solid var(--red); background: transparent; color: var(--red); padding: 12px; border-radius: 12px; font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 8px; }
+.cancel { width: 100%; border: none; background: transparent; color: var(--ink-60); padding: 10px; font-size: 13px; margin-top: 4px; cursor: pointer; }
