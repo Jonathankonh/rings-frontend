@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRings } from '../composables/useRings.js'
 import RingCard from '../components/RingCard.vue'
 import RingSheet from '../components/RingSheet.vue'
+import WeekOverview from '../components/WeekOverview.vue'
 
 const { rings, loading, error, fetchRings, createRing, updateRing, deleteRing } = useRings()
 onMounted(fetchRings)
@@ -42,6 +43,7 @@ async function handleDelete(id) {
       <RingCard v-for="ring in rings" :key="ring.id" :ring="ring" @click="openEdit" />
       <p v-if="rings.length === 0" class="empty-hint">Noch keine Kategorie angelegt.</p>
     </div>
+    <WeekOverview />
   </section>
 
   <RingSheet

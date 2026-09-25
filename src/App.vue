@@ -6,6 +6,7 @@ import { useTasks } from './composables/useTasks.js'
 import { useRings } from './composables/useRings.js'
 import TaskSheet from './components/TaskSheet.vue'
 import PrioritiesView from './views/PrioritiesView.vue'
+import Sidebar from './components/Sidebar.vue'
 
 // ---------- theme ----------
 const theme = ref(localStorage.getItem('theme') || 'system')
@@ -40,8 +41,8 @@ const activeTab = ref('rings') // 'rings' | 'tasks' | 'priorities'
 
 // ---------- global "Neue Aufgabe" (Teil der Pillen-Navigation) ----------
 const { rings, fetchRings } = useRings()
-const { createTask } = useTasks()
-onMounted(fetchRings)
+const { tasks, fetchTasks, createTask } = useTasks()
+onMounted(() => { fetchRings(); fetchTasks() })
 
 const showAddTask = ref(false)
 async function handleCreateTask({ data }) {
@@ -50,34 +51,39 @@ async function handleCreateTask({ data }) {
 </script>
 
 <template>
-  <div class="app-container">
-    <header class="top">
-      <div class="id">
-        <span class="date">{{ dateLabel }}</span>
-        <h1>Heute</h1>
-      </div>
-      <button class="theme-toggle" @click="toggleTheme" aria-label="Modus wechseln">
-        <svg v-if="theme === 'dark'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
-      </button>
-    </header>
+  <div class="shell">
+    <Sidebar class="sidebar-desktop" :active-tab="activeTab" :rings="rings" @update:active-tab="activeTab = $event" />
 
-    <RingsView v-if="activeTab === 'rings'" />
-    <TasksView v-if="activeTab === 'tasks'" />
-    <PrioritiesView v-if="activeTab === 'priorities'" />
-    <!-- PrioritiesView folgt in Schritt 5 -->
+    <div class="main app-container">
+      <header class="top">
+        <div class="id">
+          <span class="date">{{ dateLabel }}</span>
+          <h1>Heute</h1>
+        </div>
+        <div style="display: flex; align-items: center;">
+          <button class="desktop-add-btn" @click="showAddTask = true">Neue Aufgabe</button>
+          <button class="theme-toggle" @click="toggleTheme" aria-label="Modus wechseln">
+            <svg v-if="theme === 'dark'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+          </button>
+        </div>
+      </header>
 
-    <!-- Pillen-Navigation: ersetzt die alte Tab-Leiste + den separaten Button -->
-    <nav class="pill-nav">
-      <button :class="{ active: activeTab === 'rings' }" @click="activeTab = 'rings'">Heute</button>
-      <button :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">Aufgaben</button>
-      <button class="add-btn" aria-label="Neue Aufgabe" @click="showAddTask = true">
-        <svg width="18" height="18" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 2v12M2 8h12"/></svg>
-      </button>
-      <button :class="{ active: activeTab === 'priorities' }" @click="activeTab = 'priorities'">Prioritäten</button>
-    </nav>
+      <RingsView v-if="activeTab === 'rings'" />
+      <TasksView v-if="activeTab === 'tasks'" />
+      <PrioritiesView v-if="activeTab === 'priorities'" />
 
-    <TaskSheet v-model="showAddTask" :task="null" :rings="rings" @save="handleCreateTask" />
+      <nav class="pill-nav">
+        <button :class="{ active: activeTab === 'rings' }" @click="activeTab = 'rings'">Heute</button>
+        <button :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">Aufgaben</button>
+        <button class="add-btn" aria-label="Neue Aufgabe" @click="showAddTask = true">
+          <svg width="18" height="18" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 2v12M2 8h12"/></svg>
+        </button>
+        <button :class="{ active: activeTab === 'priorities' }" @click="activeTab = 'priorities'">Prioritäten</button>
+      </nav>
+
+      <TaskSheet v-model="showAddTask" :task="null" :rings="rings" @save="handleCreateTask" />
+    </div>
   </div>
 </template>
 
@@ -104,5 +110,20 @@ async function handleCreateTask({ data }) {
 .pill-nav .add-btn {
   width: 46px; height: 46px; border-radius: 50%; background: var(--ink); color: var(--paper);
   display: grid; place-items: center; padding: 0;
+}
+
+.sidebar-desktop { display: none; }
+.desktop-add-btn { display: none; }
+
+@media (min-width: 1000px) {
+  .shell { display: grid; grid-template-columns: 232px 1fr; max-width: 1280px; margin: 0 auto; }
+  .sidebar-desktop { display: flex; }
+  .pill-nav { display: none; }
+  .shell .main.app-container { max-width: none; margin: 0; padding: 32px 40px; }
+  .desktop-add-btn {
+    display: inline-flex; align-items: center; height: 42px; padding: 0 18px; border-radius: 999px;
+    border: none; background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 500; cursor: pointer; margin-right: 10px;
+  }
+  .top { align-items: flex-end; }
 }
 </style>
