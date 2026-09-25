@@ -22,14 +22,18 @@ async function authHeader() {
 async function request(path, options = {}) {
     const res = await fetch(`${BASE_URL}${path}`, {
         ...options,
-        headers: { 'Content-Type': 'application/json', ...(await authHeader()), ...options.headers },
+        headers: {
+            'Content-Type': 'application/json',
+            ...(await authHeader()),
+            ...options.headers,
+        },
     });
 
     if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || `Request failed: ${res.status}`);
     }
-    if (res.status === 204) return null; // DELETE responses have no body
+    if (res.status === 204) return null;
     return res.json();
 }
 

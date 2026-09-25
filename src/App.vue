@@ -62,14 +62,18 @@ const tabTitles = { rings: 'Heute', tasks: 'Aufgaben', priorities: 'Prioritäten
 const pageTitle = computed(() => tabTitles[activeTab.value])
 
 // ---------- data ----------
-const { rings, fetchRings, loading: ringsLoading } = useRings()
-const { tasks, fetchTasks, createTask, loading: tasksLoading } = useTasks()
-const appReady = computed(() => !ringsLoading.value && !tasksLoading.value)
+const { rings, fetchRings } = useRings()
+const { tasks, fetchTasks, createTask } = useTasks()
 
-// Erst laden, sobald wirklich jemand eingeloggt ist — vorher würde das
-// Backend die Anfrage ohnehin ablehnen (sobald Okta dort scharf geschaltet ist).
-watch(isAuthenticated, (loggedIn) => {
-  if (loggedIn) { fetchRings(); fetchTasks() }
+// appReady ist jetzt ein einmaliger Schalter, kein Live-Abbild des
+// Ladezustands mehr — er springt genau EINMAL auf true und bleibt es,
+// statt bei jedem Nachladen wieder hin- und herzuspringen.
+const appReady = ref(false)
+watch(isAuthenticated, async (loggedIn) => {
+  if (loggedIn && !appReady.value) {
+    await Promise.all([fetchRings(), fetchTasks()])
+    appReady.value = true
+  }
 }, { immediate: true })
 
 const showAddTask = ref(false)

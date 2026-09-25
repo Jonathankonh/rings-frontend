@@ -1,5 +1,7 @@
 <script setup>
 defineEmits(['login', 'signup'])
+import { useAuth0 } from '@auth0/auth0-vue'
+const { error } = useAuth0()
 </script>
 
 <template>
@@ -8,6 +10,7 @@ defineEmits(['login', 'signup'])
     <p class="tagline">Aufgaben, Kategorien und Prioritäten als schließbare Ringe.</p>
     <button class="primary" @click="$emit('login')">Einloggen</button>
     <button class="secondary" @click="$emit('signup')">Konto erstellen</button>
+    <p v-if="error" style="color: var(--red); font-size: 13px; max-width: 280px;">{{ error.message }}</p>
   </div>
 </template>
 
