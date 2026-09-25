@@ -2,10 +2,12 @@
 import { onMounted, computed } from 'vue'
 import { useTasks } from '../composables/useTasks.js'
 import { useRings } from '../composables/useRings.js'
+import ErrorState from '../components/ErrorState.vue'
 
-const { tasks, fetchTasks, toggleTask } = useTasks()
+const { tasks, fetchTasks, toggleTask, error } = useTasks()
 const { rings, fetchRings } = useRings()
 onMounted(() => { fetchTasks(); fetchRings() })
+
 
 const quadOptions = [
   { value: 'q1', label: 'wichtig · dringend' },
@@ -27,6 +29,7 @@ const quads = computed(() =>
 <template>
   <section class="block">
     <div class="block-head"><h2>Eisenhower-Matrix</h2></div>
+    <ErrorState v-if="error" :message="`Aufgaben konnten nicht geladen werden: ${error}`" @retry="fetchTasks" />
     <div class="matrix">
       <div v-for="q in quads" :key="q.value" class="quad-card">
         <div class="quad-title">{{ q.label }}</div>

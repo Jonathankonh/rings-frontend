@@ -4,6 +4,7 @@ import { useRings } from '../composables/useRings.js'
 import RingCard from '../components/RingCard.vue'
 import RingSheet from '../components/RingSheet.vue'
 import WeekOverview from '../components/WeekOverview.vue'
+import ErrorState from '../components/ErrorState.vue'
 
 const { rings, loading, error, fetchRings, createRing, updateRing, deleteRing } = useRings()
 onMounted(fetchRings)
@@ -37,7 +38,7 @@ async function handleDelete(id) {
     </div>
 
     <p v-if="loading">Lädt…</p>
-    <p v-else-if="error" class="error">Fehler: {{ error }}</p>
+    <ErrorState v-else-if="error" :message="`Ringe konnten nicht geladen werden: ${error}`" @retry="fetchRings" />
 
     <div v-else class="ring-row">
       <RingCard v-for="ring in rings" :key="ring.id" :ring="ring" @click="openEdit" />

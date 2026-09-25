@@ -5,6 +5,7 @@ import { useRings } from '../composables/useRings.js'
 import TaskCard from '../components/TaskCard.vue'
 import TaskSheet from '../components/TaskSheet.vue'
 import RingProgress from '../components/RingProgress.vue'
+import ErrorState from '../components/ErrorState.vue'
 
 const { tasks, loading, error, fetchTasks, createTask, updateTask, deleteTask, toggleTask } = useTasks()
 const { rings, fetchRings } = useRings()
@@ -56,7 +57,7 @@ const grouped = computed(() => {
     </div>
 
     <p v-if="loading">Lädt…</p>
-    <p v-else-if="error" class="error">Fehler: {{ error }}</p>
+    <ErrorState v-else-if="error" :message="`Aufgaben konnten nicht geladen werden: ${error}`" @retry="fetchTasks" />
     <p v-else-if="tasks.length === 0" class="empty-hint">Noch keine Aufgaben.</p>
 
     <div v-else v-for="group in grouped" :key="group.ring?.id || '_none'" class="group">

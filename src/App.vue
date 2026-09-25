@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import RingsView from './views/RingsView.vue'
 import TasksView from './views/TasksView.vue'
 import { useTasks } from './composables/useTasks.js'
@@ -40,8 +40,9 @@ setInterval(renderDate, 60 * 1000)
 const activeTab = ref('rings') // 'rings' | 'tasks' | 'priorities'
 
 // ---------- global "Neue Aufgabe" (Teil der Pillen-Navigation) ----------
-const { rings, fetchRings } = useRings()
-const { tasks, fetchTasks, createTask } = useTasks()
+const { rings, fetchRings, loading: ringsLoading } = useRings()
+const { tasks, fetchTasks, createTask, loading: tasksLoading } = useTasks()
+const appReady = computed(() => !ringsLoading.value && !tasksLoading.value)
 onMounted(() => { fetchRings(); fetchTasks() })
 
 const showAddTask = ref(false)
@@ -51,6 +52,7 @@ async function handleCreateTask({ data }) {
 </script>
 
 <template>
+  <LoadingScreen v-if="!appReady" />
   <div class="shell">
     <Sidebar class="sidebar-desktop" :active-tab="activeTab" :rings="rings" @update:active-tab="activeTab = $event" />
 
