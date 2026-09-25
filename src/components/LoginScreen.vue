@@ -4,7 +4,7 @@ defineEmits(['login', 'signup'])
 
 <template>
   <div class="login-screen">
-    <div class="brand">Ringe</div>
+    <div class="brand">Rings</div>
     <p class="tagline">Aufgaben, Kategorien und Prioritäten als schließbare Ringe.</p>
     <button class="primary" @click="$emit('login')">Einloggen</button>
     <button class="secondary" @click="$emit('signup')">Konto erstellen</button>

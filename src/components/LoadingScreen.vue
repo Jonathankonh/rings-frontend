@@ -1,6 +1,6 @@
 <template>
   <div class="loading-screen">
-    <div class="brand">Ringe</div>
+    <div class="brand">Rings</div>
     <div class="bar-track">
       <div class="bar-fill" />
     </div>

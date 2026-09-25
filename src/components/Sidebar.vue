@@ -5,7 +5,7 @@ const emit = defineEmits(['update:activeTab'])
 
 <template>
   <aside class="sidebar">
-    <div class="brand">Ringe</div>
+    <div class="brand">Rings</div>
     <nav class="nav">
       <button :class="{ active: activeTab === 'rings' }" @click="emit('update:activeTab', 'rings')">Heute</button>
       <button :class="{ active: activeTab === 'tasks' }" @click="emit('update:activeTab', 'tasks')">Aufgaben</button>
