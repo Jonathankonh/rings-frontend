@@ -1,12 +1,32 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import { useAuth0 } from '@auth0/auth0-vue'
 import RingsView from './views/RingsView.vue'
 import TasksView from './views/TasksView.vue'
-import { useTasks } from './composables/useTasks.js'
-import { useRings } from './composables/useRings.js'
-import TaskSheet from './components/TaskSheet.vue'
 import PrioritiesView from './views/PrioritiesView.vue'
 import Sidebar from './components/Sidebar.vue'
+import TaskSheet from './components/TaskSheet.vue'
+import LoadingScreen from './components/LoadingScreen.vue'
+import LoginScreen from './components/LoginScreen.vue'
+import { useTasks } from './composables/useTasks.js'
+import { useRings } from './composables/useRings.js'
+import { authBridge } from './authBridge.js'
+
+// ---------- auth ----------
+const {
+  isLoading: authLoading,
+  isAuthenticated,
+  loginWithRedirect,
+  logout: auth0Logout,
+  user,
+  getAccessTokenSilently,
+} = useAuth0()
+
+authBridge.getAccessTokenSilently = getAccessTokenSilently // api.js kann ab jetzt Tokens holen
+
+function login() { loginWithRedirect() }
+function signup() { loginWithRedirect({ authorizationParams: { screen_hint: 'signup' } }) }
+function handleLogout() { auth0Logout({ logoutParams: { returnTo: window.location.origin } }) }
 
 // ---------- theme ----------
 const theme = ref(localStorage.getItem('theme') || 'system')
@@ -37,15 +57,20 @@ renderDate()
 setInterval(renderDate, 60 * 1000)
 
 // ---------- tabs ----------
-const activeTab = ref('rings') // 'rings' | 'tasks' | 'priorities'
+const activeTab = ref('rings')
 const tabTitles = { rings: 'Heute', tasks: 'Aufgaben', priorities: 'Prioritäten' }
 const pageTitle = computed(() => tabTitles[activeTab.value])
 
-// ---------- global "Neue Aufgabe" (Teil der Pillen-Navigation) ----------
+// ---------- data ----------
 const { rings, fetchRings, loading: ringsLoading } = useRings()
 const { tasks, fetchTasks, createTask, loading: tasksLoading } = useTasks()
 const appReady = computed(() => !ringsLoading.value && !tasksLoading.value)
-onMounted(() => { fetchRings(); fetchTasks() })
+
+// Erst laden, sobald wirklich jemand eingeloggt ist — vorher würde das
+// Backend die Anfrage ohnehin ablehnen (sobald Okta dort scharf geschaltet ist).
+watch(isAuthenticated, (loggedIn) => {
+  if (loggedIn) { fetchRings(); fetchTasks() }
+}, { immediate: true })
 
 const showAddTask = ref(false)
 async function handleCreateTask({ data }) {
@@ -54,8 +79,10 @@ async function handleCreateTask({ data }) {
 </script>
 
 <template>
-  <LoadingScreen v-if="!appReady" />
-  <div class="shell">
+  <LoadingScreen v-if="authLoading || (isAuthenticated && !appReady)" />
+  <LoginScreen v-else-if="!isAuthenticated" @login="login" @signup="signup" />
+
+  <div v-else class="shell">
     <Sidebar class="sidebar-desktop" :active-tab="activeTab" :rings="rings" @update:active-tab="activeTab = $event" />
 
     <div class="main app-container">
@@ -64,8 +91,10 @@ async function handleCreateTask({ data }) {
           <span class="date">{{ dateLabel }}</span>
           <h1>{{ pageTitle }}</h1>
         </div>
-        <div style="display: flex; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span class="user-email">{{ user?.email }}</span>
           <button class="desktop-add-btn" @click="showAddTask = true">Neue Aufgabe</button>
+          <button class="logout-btn" @click="handleLogout">Abmelden</button>
           <button class="theme-toggle" @click="toggleTheme" aria-label="Modus wechseln">
             <svg v-if="theme === 'dark'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
             <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
@@ -95,6 +124,12 @@ async function handleCreateTask({ data }) {
 .top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; }
 .date { font-size: 13px; color: var(--ink-60); display: block; }
 .top h1 { font-size: 38px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.1; margin: 2px 0 0; }
+
+.user-email { font-size: 12px; color: var(--ink-60); display: none; }
+@media (min-width: 700px) { .user-email { display: inline; } }
+
+.logout-btn { border: none; background: transparent; color: var(--ink-60); font-size: 13px; cursor: pointer; padding: 0 4px; }
+
 .theme-toggle {
   width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line);
   background: var(--surface); color: var(--ink); display: grid; place-items: center;
@@ -111,10 +146,7 @@ async function handleCreateTask({ data }) {
 }
 .pill-nav button { border: none; background: transparent; color: var(--ink-60); padding: 11px 0; border-radius: 999px; cursor: pointer; font: inherit; }
 .pill-nav button.active { background: var(--paper-2); color: var(--ink); }
-.pill-nav .add-btn {
-  width: 46px; height: 46px; border-radius: 50%; background: var(--ink); color: var(--paper);
-  display: grid; place-items: center; padding: 0;
-}
+.pill-nav .add-btn { width: 46px; height: 46px; border-radius: 50%; background: var(--ink); color: var(--paper); display: grid; place-items: center; padding: 0; }
 
 .sidebar-desktop { display: none; }
 .desktop-add-btn { display: none; }
@@ -126,7 +158,7 @@ async function handleCreateTask({ data }) {
   .shell .main.app-container { max-width: none; margin: 0; padding: 32px 40px; }
   .desktop-add-btn {
     display: inline-flex; align-items: center; height: 42px; padding: 0 18px; border-radius: 999px;
-    border: none; background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 500; cursor: pointer; margin-right: 10px;
+    border: none; background: var(--ink); color: var(--paper); font-size: 14px; font-weight: 500; cursor: pointer;
   }
   .top { align-items: flex-end; }
 }

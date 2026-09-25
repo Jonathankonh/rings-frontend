@@ -6,22 +6,23 @@
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-// Placeholder for now — returns no Authorization header, which is fine
-// because the backend is still in "dev mode" (see auth.js). Once Okta
-// is wired up on the frontend too, this function is the ONLY place
-// that needs to change: it'll return { Authorization: `Bearer ${token}` }.
-function authHeader() {
-    return {};
+
+import { authBridge } from './authBridge.js'
+
+async function authHeader() {
+    if (!authBridge.getAccessTokenSilently) return {}
+    try {
+        const token = await authBridge.getAccessTokenSilently()
+        return { Authorization: `Bearer ${token}` }
+    } catch {
+        return {} // nicht eingeloggt oder Token abgelaufen — Backend antwortet dann mit 401
+    }
 }
 
 async function request(path, options = {}) {
     const res = await fetch(`${BASE_URL}${path}`, {
         ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...authHeader(),
-            ...options.headers,
-        },
+        headers: { 'Content-Type': 'application/json', ...(await authHeader()), ...options.headers },
     });
 
     if (!res.ok) {
