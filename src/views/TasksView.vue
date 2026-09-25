@@ -4,6 +4,7 @@ import { useTasks } from '../composables/useTasks.js'
 import { useRings } from '../composables/useRings.js'
 import TaskCard from '../components/TaskCard.vue'
 import TaskSheet from '../components/TaskSheet.vue'
+import RingProgress from '../components/RingProgress.vue'
 
 const { tasks, loading, error, fetchTasks, createTask, updateTask, deleteTask, toggleTask } = useTasks()
 const { rings, fetchRings } = useRings()
@@ -60,7 +61,11 @@ const grouped = computed(() => {
 
     <div v-else v-for="group in grouped" :key="group.ring?.id || '_none'" class="group">
       <div class="group-head">
-        <div class="group-dot" :style="{ background: group.ring ? `var(--${group.ring.color})` : 'var(--ink-35)' }" />
+        <RingProgress
+            v-if="group.ring"
+            :value="group.ring.value" :goal="group.ring.goal" :color="group.ring.color" :size="22"
+        />
+        <div v-else class="group-dot" />
         <div class="group-name">{{ group.ring ? group.ring.name : 'Ohne Kategorie' }}</div>
         <div class="group-count">{{ group.items.filter(t => !t.done).length }} offen</div>
       </div>

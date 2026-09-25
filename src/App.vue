@@ -1,7 +1,11 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import RingsView from './views/RingsView.vue'
 import TasksView from './views/TasksView.vue'
+import { useTasks } from './composables/useTasks.js'
+import { useRings } from './composables/useRings.js'
+import TaskSheet from './components/TaskSheet.vue'
+import PrioritiesView from './views/PrioritiesView.vue'
 
 // ---------- theme ----------
 const theme = ref(localStorage.getItem('theme') || 'system')
@@ -10,7 +14,7 @@ function applyTheme() {
   const isDark = theme.value === 'dark' || (theme.value === 'system' && prefersDark)
   if (theme.value === 'system') document.documentElement.removeAttribute('data-theme')
   else document.documentElement.setAttribute('data-theme', theme.value)
-  document.getElementById('theme-color-meta')?.setAttribute('content', isDark ? '#1C1C1E' : '#FFFFFF')
+  document.getElementById('theme-color-meta')?.setAttribute('content', isDark ? '#1f1f22' : '#f6f6f4')
 }
 function toggleTheme() {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -24,52 +28,81 @@ applyTheme()
 // ---------- date ----------
 const dateLabel = ref('')
 function renderDate() {
-  const wd = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
+  const wd = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag']
   const now = new Date()
-  dateLabel.value = `${wd[now.getDay()]}, ${now.getDate()}.${now.getMonth() + 1}.`
+  dateLabel.value = `${wd[now.getDay()]}, ${now.getDate()}. ${now.toLocaleDateString('de-DE', { month: 'long' })}`
 }
 renderDate()
 setInterval(renderDate, 60 * 1000)
 
 // ---------- tabs ----------
-const activeTab = ref('rings') // später auch 'tasks', 'priorities'
+const activeTab = ref('rings') // 'rings' | 'tasks' | 'priorities'
+
+// ---------- global "Neue Aufgabe" (Teil der Pillen-Navigation) ----------
+const { rings, fetchRings } = useRings()
+const { createTask } = useTasks()
+onMounted(fetchRings)
+
+const showAddTask = ref(false)
+async function handleCreateTask({ data }) {
+  await createTask(data)
+}
 </script>
 
 <template>
   <div class="app-container">
     <header class="top">
       <div class="id">
-        <h1>Ringe</h1>
         <span class="date">{{ dateLabel }}</span>
+        <h1>Heute</h1>
       </div>
-      <button class="theme-toggle" @click="toggleTheme" aria-label="Farbmodus umschalten">
-        <svg v-if="theme === 'dark'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/></svg>
-        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.2A8.3 8.3 0 1 1 9.8 4a6.6 6.6 0 0 0 10.2 10.2z"/></svg>
+      <button class="theme-toggle" @click="toggleTheme" aria-label="Modus wechseln">
+        <svg v-if="theme === 'dark'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
       </button>
     </header>
 
-    <nav class="tabs">
-      <button :class="{ active: activeTab === 'rings' }" @click="activeTab = 'rings'">Ringe</button>
-      <!-- nachher -->
-      <button :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">Aufgaben</button>
-      <button disabled title="kommt als Nächstes">Prioritäten</button>
-    </nav>
-
     <RingsView v-if="activeTab === 'rings'" />
     <TasksView v-if="activeTab === 'tasks'" />
+    <PrioritiesView v-if="activeTab === 'priorities'" />
+    <!-- PrioritiesView folgt in Schritt 5 -->
+
+    <!-- Pillen-Navigation: ersetzt die alte Tab-Leiste + den separaten Button -->
+    <nav class="pill-nav">
+      <button :class="{ active: activeTab === 'rings' }" @click="activeTab = 'rings'">Heute</button>
+      <button :class="{ active: activeTab === 'tasks' }" @click="activeTab = 'tasks'">Aufgaben</button>
+      <button class="add-btn" aria-label="Neue Aufgabe" @click="showAddTask = true">
+        <svg width="18" height="18" viewBox="0 0 16 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 2v12M2 8h12"/></svg>
+      </button>
+      <button :class="{ active: activeTab === 'priorities' }" @click="activeTab = 'priorities'">Prioritäten</button>
+    </nav>
+
+    <TaskSheet v-model="showAddTask" :task="null" :rings="rings" @save="handleCreateTask" />
   </div>
 </template>
 
 <style scoped>
-.top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
-.id { display: flex; align-items: baseline; gap: 10px; }
-.top h1 { font-size: 19px; font-weight: 600; margin: 0; color: var(--ink-60); }
-.date { font-family: monospace; font-size: 12px; color: var(--ink-35); }
-.theme-toggle { border: none; background: transparent; color: var(--ink-60); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.theme-toggle svg { width: 16px; height: 16px; }
+.top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 22px; }
+.date { font-size: 13px; color: var(--ink-60); display: block; }
+.top h1 { font-size: 38px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.1; margin: 2px 0 0; }
+.theme-toggle {
+  width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); display: grid; place-items: center;
+  cursor: pointer; padding: 0; flex: none;
+}
+.theme-toggle svg { width: 18px; height: 18px; }
 
-.tabs { display: flex; gap: 22px; padding: 0 2px; margin-bottom: 30px; border-bottom: 1px solid var(--line); }
-.tabs button { border: none; background: transparent; color: var(--ink-35); font-size: 14px; font-weight: 600; padding: 0 0 12px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.tabs button.active { color: var(--ink); border-bottom-color: var(--ink); }
-.tabs button:disabled { cursor: default; opacity: 0.4; }
+.pill-nav {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  width: calc(100% - 40px); max-width: 520px;
+  margin: 0 auto; padding: 5px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line);
+  display: grid; grid-template-columns: 1fr 1fr 46px 1fr; align-items: center; gap: 3px;
+  font-size: 12.5px; font-weight: 500; text-align: center; z-index: 5;
+}
+.pill-nav button { border: none; background: transparent; color: var(--ink-60); padding: 11px 0; border-radius: 999px; cursor: pointer; font: inherit; }
+.pill-nav button.active { background: var(--paper-2); color: var(--ink); }
+.pill-nav .add-btn {
+  width: 46px; height: 46px; border-radius: 50%; background: var(--ink); color: var(--paper);
+  display: grid; place-items: center; padding: 0;
+}
 </style>
