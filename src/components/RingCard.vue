@@ -8,10 +8,14 @@ const props = defineProps({ ring: { type: Object, required: true } })
 defineEmits(['click'])
 
 function subLabel(ring) {
-  if (ring.type === 'minutes') return `${ring.value}/${ring.goal} min`
-  if (ring.type === 'bool') return ring.value >= ring.goal ? 'erledigt' : 'offen'
-  return `${ring.value}/${ring.goal}`
+  if (ring.type === 'minutes') return `${ring.value} / ${ring.goal} min`
+  if (ring.type === 'bool') return ring.value >= ring.goal ? 'Erledigt' : 'Offen'
+  if (ring.type === 'tasks') {
+    return ring.goal === 0 ? 'Noch keine Aufgaben zugeordnet' : `${ring.value} / ${ring.goal} Aufgaben`
+  }
+  return `${ring.value} / ${ring.goal}`
 }
+
 </script>
 
 <template>

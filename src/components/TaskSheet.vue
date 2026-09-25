@@ -93,8 +93,10 @@ function handleDelete(close) {
       <p v-if="rings.length === 0" class="empty-hint">Erst eine Kategorie im Ringe-Tab anlegen.</p>
     </div>
 
-    <div class="field-label">{{ amountLabel }}</div>
-    <input v-model.number="form.amount" type="number" min="1" :disabled="selectedRing?.type === 'bool'" />
+    <template v-if="selectedRing?.type !== 'tasks'">
+      <div class="field-label">{{ amountLabel }}</div>
+      <input v-model.number="form.amount" type="number" min="1" :disabled="selectedRing?.type === 'bool'" />
+    </template>
 
     <div class="field-label">Priorität</div>
     <div class="quad-pick">

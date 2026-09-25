@@ -38,7 +38,9 @@ const typeOptions = [
   { value: 'minutes', label: 'Minuten' },
   { value: 'count', label: 'Anzahl' },
   { value: 'bool', label: 'Ja/Nein' },
+  { value: 'tasks', label: 'Aus Aufgaben' },
 ]
+
 const colorOptions = [
   { value: 'purple', label: 'Lila' },
   { value: 'blue', label: 'Blau' },
@@ -48,9 +50,11 @@ const colorOptions = [
 
 function handleSave(close) {
   if (!form.name.trim()) return
-  emit('save', { id: props.ring?.id ?? null, data: { ...form } })
+  const goal = form.type === 'tasks' ? 1 : form.goal
+  emit('save', { id: props.ring?.id ?? null, data: { ...form, goal } })
   close()
 }
+
 function handleDelete(close) {
   if (!props.ring) return
   if (!confirm('Diese Kategorie wirklich löschen?')) return
@@ -75,8 +79,10 @@ function handleDelete(close) {
       >{{ opt.label }}</div>
     </div>
 
-    <div class="field-label">Tagesziel</div>
-    <input v-model.number="form.goal" type="number" min="1" />
+    <template v-if="form.type !== 'tasks'">
+      <div class="field-label">Tagesziel</div>
+      <input v-model.number="form.goal" type="number" min="1" />
+    </template>
 
     <div class="field-label">Farbe</div>
     <div class="choice-row">
