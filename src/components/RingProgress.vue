@@ -10,10 +10,11 @@ const props = defineProps({
 })
 
 const r = computed(() => props.size * 0.41)
-const strokeWidth = computed(() => props.size / 9) // 64px Ring → ~7px Strich, wie in 1a
+const strokeWidth = computed(() => props.size / 9)
 const circumference = computed(() => 2 * Math.PI * r.value)
 const pct = computed(() => (props.goal > 0 ? Math.min(props.value / props.goal, 1) : 0))
-const offset = computed(() => circumference.value * (1 - pct.value))const strokeColor = computed(() => (pct.value >= 1 ? 'var(--green)' : colorVarFor(props.color)))
+const offset = computed(() => circumference.value * (1 - pct.value))
+const strokeColor = computed(() => (pct.value >= 1 ? 'var(--green)' : colorVarFor(props.color)))
 
 const celebrating = ref(false)
 watch(pct, (newVal, oldVal) => {
