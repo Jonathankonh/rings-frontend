@@ -8,6 +8,13 @@
 import { ref } from 'vue'
 import * as api from '../api.js'
 
+// Merkt sich, welche Ringe schon "gefeiert" wurden, damit die Schließ-Animation
+// nicht bei jedem Tab-Wechsel erneut feuert, aber auch nicht verloren geht,
+// nur weil die Ring-Karte kurz nicht sichtbar war (z.B. während du im
+// Aufgaben-Tab warst). Lebt hier, nicht in der Ring-Komponente selbst, weil
+// die bei jedem Tab-Wechsel neu erzeugt wird und sich sonst nichts merken könnte.
+const celebratedRingIds = new Set()
+
 const rings = ref([])
 const loading = ref(true)
 const error = ref(null)
@@ -52,5 +59,5 @@ function patchRingLocally(updatedRing) {
 }
 
 export function useRings() {
-    return { rings, loading, error, fetchRings, createRing, updateRing, deleteRing, patchRingLocally }
+    return { rings, loading, error, fetchRings, createRing, updateRing, deleteRing, patchRingLocally, celebratedRingIds }
 }

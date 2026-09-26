@@ -20,7 +20,7 @@ function subLabel(ring) {
 
 <template>
   <div class="ring-card" :class="{ done: ring.value >= ring.goal }" @click="$emit('click', ring)">
-    <RingProgress :value="ring.value" :goal="ring.goal" :color="ring.color" />
+    <RingProgress :id="ring.id" :value="ring.value" :goal="ring.goal" :color="ring.color" :size="64" />
     <div class="ring-label">{{ ring.name }}</div>
     <div class="ring-sub">{{ subLabel(ring) }}</div>
   </div>

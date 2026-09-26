@@ -1,8 +1,12 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { colorVarFor } from '../colors.js'
+import { useRings } from '../composables/useRings.js'
+
+const { celebratedRingIds } = useRings()
 
 const props = defineProps({
+  id: { type: String, required: true },
   value: { type: Number, required: true },
   goal: { type: Number, required: true },
   color: { type: String, default: 'purple' },
@@ -17,12 +21,23 @@ const offset = computed(() => circumference.value * (1 - pct.value))
 const strokeColor = computed(() => (pct.value >= 1 ? 'var(--green)' : colorVarFor(props.color)))
 
 const celebrating = ref(false)
-watch(pct, (newVal, oldVal) => {
-  if (oldVal !== undefined && oldVal < 1 && newVal >= 1) {
-    celebrating.value = true
-    setTimeout(() => (celebrating.value = false), 900)
-  }
-})
+
+// immediate: true — prüft auch direkt beim ERSCHEINEN der Karte (nicht nur bei
+// späteren Änderungen), ob der Ring gerade frisch voll ist und noch nie gefeiert
+// wurde. Genau das löst das Tab-Wechsel-Problem.
+watch(
+    pct,
+    (value) => {
+      if (value >= 1 && !celebratedRingIds.has(props.id)) {
+        celebratedRingIds.add(props.id)
+        celebrating.value = true
+        setTimeout(() => (celebrating.value = false), 900)
+      } else if (value < 1) {
+        celebratedRingIds.delete(props.id) // Ring nicht mehr voll -> darf beim nächsten Abschluss wieder feiern
+      }
+    },
+    { immediate: true }
+)
 </script>
 
 <template>
