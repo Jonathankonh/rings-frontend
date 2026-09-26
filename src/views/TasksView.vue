@@ -64,6 +64,7 @@ const grouped = computed(() => {
       <div class="group-head">
         <RingProgress
             v-if="group.ring"
+            :id="group.ring.id"
             :value="group.ring.value" :goal="group.ring.goal" :color="group.ring.color" :size="22"
         />
         <div v-else class="group-dot" />
