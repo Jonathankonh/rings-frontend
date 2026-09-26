@@ -26,7 +26,7 @@ const quadLabel = {
 <style scoped>
 .task-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
 .task-row:last-child { border-bottom: none; }
-.task-ch.task-check {
+.task-check {
   width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--line);
   display: flex; align-items: center; justify-content: center; flex: 0 0 auto; cursor: pointer;
 }
